@@ -46,7 +46,7 @@ class MockCompanyDynamoResource(MockEmptyDynamoResource):
 
 
 class MockUserDynamoResource(MockEmptyDynamoResource):
-    user_item = {
+    user_item1 = {
         'Items': [{
             'lsi': 'True#False#123asddv32ef',
             'user_id': '123asddv32ef',
@@ -56,13 +56,44 @@ class MockUserDynamoResource(MockEmptyDynamoResource):
             'phone': '+61123123123',
             'age': 31,
             'fruits': ['apples', 'oranges'],
-            'vegetables': ['okra', 'celery']
+            'vegetables': ['okra', 'celery'],
+            'friends': [0, 1],
+            'has_died': True,
+            'eyeColor': 'blue',
+            'address': 'Eden-6'
+        }],
+        'Count': 1
+    }
+    user_item2 = {
+        'Items': [{
+            'lsi': 'True#False#123asddv32ef',
+            'user_id': '12312312DSAFASDF',
+            'fullname': 'Tester2 User',
+            'username': 'Tester2',
+            'email': 'test2@test.com',
+            'phone': '+611233123123',
+            'age': 31,
+            'fruits': ['apples', 'oranges'],
+            'vegetables': ['okra', 'celery'],
+            'friends': [0, 1, 2],
+            'has_died': False,
+            'eyeColor': 'brown',
+            'address': 'Sanctuary 3'
         }],
         'Count': 1
     }
 
     def query(self, **kwargs):
-        return self.user_item
+        if '123asddv32ef' in kwargs[
+                'KeyConditionExpression']._values[1]._values[1]:
+            return self.user_item1
+        elif'12312312DSAFASDF' in kwargs[
+                'KeyConditionExpression']._values[1]._values[1]:
+            return self.user_item2
+        elif 'FilterExpression' in kwargs:
+            return self.user_item2
+        else:
+            return {'Count': 0}
 
 
 class CompanyAPITestCases(TestCase):
@@ -149,20 +180,97 @@ class UserAPITestCases(TestCase):
         ):
             resp = client.get(self.url.format('123asddv32ef'))
             self.assertEqual(resp.status_code, 200)
-            print(resp.json)
+            expected_keys = ['username', 'age', 'fruits', 'vegetables']
+            for key in expected_keys:
+                self.assertIn(key, resp.json)
 
     def test_user_api_no_id_no_params(self):
-        pass
+        """Test user api returns error when there's no ID and parameters."""
+        with app.test_client() as client:
+            resp = client.get(self.url.format(''))
+            self.assertEqual(resp.status_code, 400)
+            resp_body = resp.json
+            self.assertIn('Error', resp_body)
+            self.assertEqual(
+                resp_body['Error'],
+                'No query parameters'
+            )
 
     def test_user_api_no_id_one_key_missing(self):
-        pass
+        """Test user api returns error when only one query parameter exists."""
+        with app.test_client() as client:
+            resp = client.get(
+                self.url.format(''),
+                query_string={
+                    'user1': 'asdasd123'
+                }
+            )
+            self.assertEqual(resp.status_code, 400)
+            resp_body = resp.json
+            self.assertIn('Error', resp_body)
+            self.assertIn(
+                'One of the required query parameters missing. Existing keys:',
+                resp_body['Error'],
+            )
 
     def test_user_api_no_id_one_user_non_existent(self):
-        pass
+        """Test user api returns error when only one user is existing."""
+        with app.test_client() as client, mock.patch(
+            'app.app.DDB_TABLE',
+            MockUserDynamoResource()
+        ):
+            resp = client.get(
+                self.url.format(''),
+                query_string={
+                    'user1': '123asddv32ef',
+                    'user2': 'asdasd1234'
+                }
+            )
+            self.assertEqual(resp.status_code, 400)
+            resp_body = resp.json
+            self.assertIn('Error', resp_body)
+            self.assertIn(
+                'User(s) requested are not existing:',
+                resp_body['Error'],
+            )
 
     def test_user_api_no_id_success(self):
-        pass
-
+        """Test user api returns data succesfully using query parameters."""
+        with app.test_client() as client, mock.patch(
+            'app.app.DDB_TABLE',
+            MockUserDynamoResource()
+        ) as mock_table:
+            resp = client.get(
+                self.url.format(''),
+                query_string={
+                    'user1': '123asddv32ef',
+                    'user2': '12312312DSAFASDF'
+                }
+            )
+            resp_body = resp.json
+            required_keys = ['user1', 'user2', 'common_friends']
+            user_attribute_keys = ['fullname', 'age', 'address', 'phone']
+            for key in required_keys:
+                self.assertIn(key, resp_body)
+            user1 = mock_table.user_item1['Items'][0]
+            for key in user_attribute_keys:
+                self.assertIn(key, resp_body['user1'])
+                self.assertEqual(resp_body['user1'][key], user1[key])
+            user2 = mock_table.user_item2['Items'][0]
+            for key in user_attribute_keys:
+                self.assertIn(key, resp_body['user2'])
+                self.assertEqual(resp_body['user2'][key], user2[key])
+            friends_keys = [
+                'user_id', 'fullname', 'age',
+                'address', 'phone', 'eyeColor',
+                'has_died',
+            ]
+            for key in friends_keys:
+                self.assertIn(key, resp_body['common_friends'][0])
+                self.assertEqual(
+                    resp_body['common_friends'][0][key],
+                    user2[key]
+                )
 
 
 if __name__ == '__main__':

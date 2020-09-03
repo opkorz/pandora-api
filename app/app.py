@@ -45,7 +45,7 @@ class CompanyAPI(MethodView):
                 payload = {'Error': 'Company being retrieved does not exist'}
                 status_code = 404
             else:
-                company = company['Items'].pop()
+                company = company['Items'][0]
                 # Retrieve users employees the company
                 user_key_exp = Key('pk').eq('person') & Key(
                     'sk').begins_with(company_id)
@@ -89,7 +89,7 @@ class UserAPI(MethodView):
             if user.get('Count', 0) == 0:
                 continue
             else:
-                return user['Items'].pop()
+                return user['Items'][0]
 
     def retrieve_common_friends(
             self, user_ids, friends=pd.DataFrame(), last_record=None):

@@ -23,3 +23,25 @@ To deliver your system, you need to send the link on GitHub. Your solution must 
 - Tests
 
 Feel free to reach to your point of contact for clarification if you have any questions.
+
+## Prerequisites
+- Docker Engine >= 19.03.0+
+- docker-compose >= 1.10.0
+
+## Setup
+To be able to build the api image, you'll need to run:
+```
+docker-compose build pandora --build-arg COMPANIES_FILE_PATH=/path/to/companies.json --build-arg PEOPLE_FILE_PATH=/path/to/people.json
+```
+or
+```
+docker build -t pandora-build . --build-arg --build-arg COMPANIES_FILE_PATH=/path/to/companies.json --build-arg PEOPLE_FILE_PATH=/path/to/people.json
+```
+If you mix up the 2 paths, data will not be loaded properly
+
+## Running the API
+You can run the API by running this command:
+```
+docker-compose up (-d) if you want to run in daemon
+```
+This command will load data into the data store and the API will deploy on port 5000 of your localhost
