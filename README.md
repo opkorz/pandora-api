@@ -10,19 +10,7 @@ For example, instead of providing a list of fruits and vegetables their citizens
 Your API must provides these end points:
 - Given a company, the API needs to return all their employees. Provide the appropriate solution if the company does not have any employees.
 - Given 2 people, provide their information (Name, Age, Address, phone) and the list of their friends in common which have brown eyes and are still alive.
-- Given 1 people, provide a list of fruits and vegetables they like. This endpoint must respect this interface for the output: `{"username": "Ahi", "age": "30", "fruits": ["banana", "apple"], "vegetables": ["beetroot", "lettuce"]}`
-
-## Delivery
-To deliver your system, you need to send the link on GitHub. Your solution must provide tasks to install dependencies, build the system and run. Solutions that does not fit this criteria **will not be accepted** as a solution. Assume that we have already installed in our environment Python, MySQL, PostgreSQL, MongoDB and Redis; any other technologies required must be installed in the install dependencies task. Moreover well tested and designed systems are one of the main criteria of this assessement 
-
-## Evaluation criteria
-- Solutions written in Python is required.
-- Installation instructions that work.
-- During installation, we may use different companies.json or people.json files.
-- The API must work.
-- Tests
-
-Feel free to reach to your point of contact for clarification if you have any questions.
+- Given 1 people, provide a list of fruits and vegetables they like. This endpoint must respect this interface for the output: `{"username": "Ahi", "age": "30", "fruits": ["banana", "apple"], "vegetables": ["beetroot", "lettuce"]}` 
 
 ## Prerequisites
 - Docker Engine >= 19.03.0+
@@ -45,3 +33,22 @@ You can run the API by running this command:
 docker-compose up (-d) if you want to run in daemon
 ```
 This command will load data into the data store and the API will deploy on port 5000 of your localhost
+
+## API Endpoints
+- `/companies/<int:company_id>` - This endpoint will return a company's details and its employees
+- `/users/<string:user_id>` - This endpoint will return some of the user's details including their favourite fruits and vegetables
+- `/users/` - Requiring the query parameters `user1` and `user2` corresponding to user IDs, this will endpoint will return the two user's details and common friends that has brown eyes and are still alive.
+
+## Sample API calls
+### Company API
+```
+curl "http://localhost:5000/companies/1"
+```
+### User API with ID
+```
+curl "http://localhost:5000/users/595eeb9b96d80a5bc7afb106"
+```
+### User API with query parameters
+```
+curl "http://localhost:5000/users/?user1=595eeb9b96d80a5bc7afb106&user2=595eeb9b1e0d8942524c98ad"
+```
