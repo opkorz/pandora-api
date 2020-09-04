@@ -90,5 +90,5 @@ docker-compose down  # This cleans up the containers and networks created by doc
 docker rmi pandora-build  # This removes the image built
 ```
 
-##References
+## References
 - Food data set (https://github.com/yufree/expodb/blob/master/foodb/foods.csv)
