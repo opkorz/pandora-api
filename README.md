@@ -17,8 +17,8 @@ Your API must provides these end points:
 - docker-compose >= 1.10.0
 
 ## Installing Docker and docker-compose
--Docker: https://docs.docker.com/get-docker/
--docker-compose: https://docs.docker.com/compose/install/
+- Docker: https://docs.docker.com/get-docker/
+- docker-compose: https://docs.docker.com/compose/install/
 
 ## Setup
 To be able to build the api image, you'll need to run:
