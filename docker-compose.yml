@@ -12,7 +12,7 @@ services:
             - dynamodb-local
         links:
             - "dynamodb-local"
-        command: 'bash -c "./run.sh && flask run"'
+        command: 'bash -c "./run.sh && flask run --host 0.0.0.0"'
         volumes:
             - ./resources:/opt/pandora/resources
         environment:

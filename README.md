@@ -23,7 +23,7 @@ https://docs.docker.com/compose/install/
 ## Setup
 To be able to build the api image, you'll need to run:
 ```
-docker-compose build pandora --build-arg COMPANIES_FILE_PATH=/path/to/companies.json --build-arg PEOPLE_FILE_PATH=/path/to/people.json
+docker-compose build --build-arg COMPANIES_FILE_PATH=/path/to/companies.json --build-arg PEOPLE_FILE_PATH=/path/to/people.json pandora
 ```
 or
 ```
@@ -56,3 +56,39 @@ curl "http://localhost:5000/users/595eeb9b96d80a5bc7afb106"
 ```
 curl "http://localhost:5000/users/?user1=595eeb9b96d80a5bc7afb106&user2=595eeb9b1e0d8942524c98ad"
 ```
+
+## Adding more data?
+- Make sure that the dynamoDB container is running
+- Replace or update the companies.json or people.json
+- Run this command, this will add what's in the json files to the dynamo table.:
+```
+docker-compose run --rm --entrypoint ./load_data.sh pandora
+```
+`--rm` option is just for cleaning up
+
+## Duplicated data?
+Duplicated items are handled appropriately, older record will be updated by the newer record if there are any changes.
+
+## Need new classfications?
+If you need want to add more fruits or vegetables, or basically just want to switch up classifications, you can append or change the `fruits-veg.csv` under the resources directory. You just have to make sure that there are `fruits` or `vegetables` to the food group since it's a main point of classification
+```
+name,food_group
+rakk,vegetables
+```
+
+## Running tests
+You can run the unittest by running this command:
+```
+docker-compose run --rm --entrypoint ./run_tests.sh pandora
+```
+`--rm` option is just for cleaning up
+
+## Cleaning up
+After all these, you can and should clean up after yourself, run these commands only if you want to:
+```
+docker-compose down  # This cleans up the containers and networks created by docker
+docker rmi pandora-build  # This removes the image built
+```
+
+##References
+- Food data set (https://github.com/yufree/expodb/blob/master/foodb/foods.csv)

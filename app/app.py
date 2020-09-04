@@ -48,7 +48,7 @@ class CompanyAPI(MethodView):
                 company = company['Items'][0]
                 # Retrieve users employees the company
                 user_key_exp = Key('pk').eq('person') & Key(
-                    'sk').begins_with(company_id)
+                    'sk').begins_with(str(company_id))
                 users = DDB_TABLE.query(
                     KeyConditionExpression=user_key_exp,
                     ProjectionExpression=', '.join(user_details)
@@ -129,8 +129,10 @@ class UserAPI(MethodView):
                     payload = {
                         'username': user['username'],
                         'age': int(user['age']),
-                        'fruits': user.get('fruits', []),
-                        'vegetables': user.get('vegetables', [])
+                        'fruits': list(
+                            user['fruits']) if user['fruits'] else None,
+                        'vegetables': list(
+                            user['vegetables']) if user['vegetables'] else None
                     }
                     status_code = 200
                 else:

@@ -13,6 +13,7 @@ DYNAMO_RESOURCE = boto3.resource(
     endpoint_url='http://dynamodb-local:8000'
 )
 TABLE_NAME = 'PandoraDetails'
+FRUITS_VEG_LIST = pd.read_csv('/opt/pandora/resources/fruits-veg.csv')
 
 
 def create_table():
@@ -78,7 +79,7 @@ def load_companies(path):
         for entry in dframe.to_dict(orient='records'):
             item = {
                 'pk': 'company',
-                'sk': '{}#{}#'.format(
+                'sk': '{}#{}'.format(
                     entry['index'],
                     entry['company']
                 ),
@@ -109,6 +110,7 @@ def vector_operations(columns=[], **kwargs):
     if 'username' in columns:
         username_column = kwargs['name'].str.split(' ').str[0]
         ret_vectors.append(username_column)
+
     return (vector for vector in ret_vectors)
 
 
@@ -119,7 +121,7 @@ def load_people(path):
     dframe = pd.read_json(path, orient='records')
     dframe['pk'] = 'person'
     dframe['sk'], dframe['lsi'], dframe['username'] = vector_operations(
-        columns=['sk', 'lsi', 'username'],
+        columns=['sk', 'lsi', 'username', 'fruits'],
         user_id=dframe['_id'],
         company_id=dframe['company_id'],
         index=dframe['index'],
@@ -130,6 +132,18 @@ def load_people(path):
     dframe['age'] = dframe['age'].astype(int)
     dframe['friends'] = dframe['friends'].apply(
         lambda x: [item['index'] for item in x])
+    # Extract favourite fruits and vegatables
+    fruits_veg_grouped = FRUITS_VEG_LIST.groupby(
+        'food_group')['name'].apply(set)
+    fruits_list = fruits_veg_grouped.loc['fruits']
+    veg_list = fruits_veg_grouped.loc['vegetables']
+    dframe['favouriteFood'] = dframe['favouriteFood'].apply(set)
+    dframe['fruits'] = dframe['favouriteFood'].apply(
+        lambda x: x.intersection(fruits_list) if len(x.intersection(
+            fruits_list)) != 0 else None)
+    dframe['vegetables'] = dframe['favouriteFood'].apply(
+        lambda x: x.intersection(veg_list) if len(x.intersection(
+            veg_list)) != 0 else None)
     dframe.rename({
         '_id': 'user_id',
         'name': 'fullname'
